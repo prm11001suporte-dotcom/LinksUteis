@@ -89,7 +89,7 @@
           .obterLinksUteis();
       } else {
         // Execução externa (GitHub Pages): GET simples, sem cabeçalhos customizados
-        if (URL_API.indexOf("https://script.google.com/macros/s/AKfycbw8AdPR9CmBc6M1SG4r8O-4lQ7F-3WZO9I_ow28B1gu/dev?modo=links") !== -1) {
+        if (URL_API.indexOf("https://script.google.com/macros/s/AKfycbw8AdPR9CmBc6M1SG4r8O-4lQ7F-3WZO9I_ow28B1gu/exec?modo=links") !== -1) {
           tratarErro(new Error("Configure a constante URL_API com a URL do Web App (/exec)."));
           return;
         }
