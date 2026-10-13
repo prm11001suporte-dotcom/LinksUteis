@@ -73,7 +73,7 @@
     // Só é usada fora do Apps Script (ex.: GitHub Pages).
     // Dentro do Apps Script, o google.script.run é usado automaticamente.
     // ============================================================
-    const URL_API = "https://script.google.com/macros/s/AKfycbzQR-d6Q7sloUQC95NaY2p5SSEKWFpptUk1PtZ18aW3DTrOuLosBxflfcUFdcVohF_IZA/exec?modo=links";
+    const URL_API = "https://script.google.com/macros/s/AKfycbw8AdPR9CmBc6M1SG4r8O-4lQ7F-3WZO9I_ow28B1gu/exec?modo=links";
 
     const TOTAL_SLOTS = 16; // grid 4x4
 
@@ -94,7 +94,10 @@
           return;
         }
 
-        fetch(URL_API + "?modo=api_links")
+        // Remove qualquer "?..." ou "#..." colado por engano na URL_API
+        const urlBase = URL_API.split("?")[0].split("#")[0].trim();
+
+        fetch(urlBase + "?modo=api_links")
           .then(function (resp) {
             if (!resp.ok) throw new Error("HTTP " + resp.status);
             return resp.json();
