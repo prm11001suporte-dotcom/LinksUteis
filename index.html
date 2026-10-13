@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Links Úteis do PRM 11 - 001</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -22,6 +23,8 @@
       position: fixed;
       inset: 0;
       z-index: -2;
+      /* No GitHub Pages, prefira subir a imagem no repositório (ex.: url('fundo.png')),
+         pois o link do Drive só carrega se o arquivo estiver compartilhado publicamente. */
       background-image: url('https://lh3.googleusercontent.com/d/10Cyvtv8sTQQ_WD8dQcOs9yRnWQ8wiz3y');
       background-size: 60%;
       background-position: center;
@@ -65,25 +68,60 @@
   </main>
 
   <script>
-    // Cole aqui a URL do seu Web App do Apps Script adicionando ?modo=api_links
-    const URL_API = "https://script.google.com/macros/s/AKfycbzQR-d6Q7sloUQC95NaY2p5SSEKWFpptUk1PtZ18aW3DTrOuLosBxflfcUFdcVohF_IZA/dev?modo=links";
+    // ============================================================
+    // CONFIGURAÇÃO: cole aqui a URL do Web App (termina em /exec).
+    // Só é usada fora do Apps Script (ex.: GitHub Pages).
+    // Dentro do Apps Script, o google.script.run é usado automaticamente.
+    // ============================================================
+    const URL_API = "COLE_AQUI_A_URL_DO_WEB_APP/exec";
+
+    const TOTAL_SLOTS = 16; // grid 4x4
 
     document.addEventListener("DOMContentLoaded", function () {
-      fetch(URL_API)
-        .then(response => response.json())
-        .then(data => renderizarLinks(data))
-        .catch(erro => tratarErro(erro));
+      const dentroDoAppsScript =
+        typeof google !== "undefined" && google.script && google.script.run;
+
+      if (dentroDoAppsScript) {
+        // Execução dentro do Apps Script
+        google.script.run
+          .withSuccessHandler(renderizarLinks)
+          .withFailureHandler(tratarErro)
+          .obterLinksUteis();
+      } else {
+        // Execução externa (GitHub Pages): GET simples, sem cabeçalhos customizados
+        if (URL_API.indexOf("https://script.google.com/macros/s/AKfycbw8AdPR9CmBc6M1SG4r8O-4lQ7F-3WZO9I_ow28B1gu/dev?modo=links") !== -1) {
+          tratarErro(new Error("Configure a constante URL_API com a URL do Web App (/exec)."));
+          return;
+        }
+
+        fetch(URL_API + "?modo=api_links")
+          .then(function (resp) {
+            if (!resp.ok) throw new Error("HTTP " + resp.status);
+            return resp.json();
+          })
+          .then(function (dados) {
+            if (dados && dados.erro) throw new Error(dados.erro);
+            renderizarLinks(dados);
+          })
+          .catch(tratarErro);
+      }
     });
+
+    // Aceita apenas URLs http(s) como destino de link
+    function urlSegura(url) {
+      return typeof url === "string" && /^https?:\/\//i.test(url.trim());
+    }
 
     function renderizarLinks(matrizDados) {
       const container = document.getElementById("grid-links");
       container.innerHTML = "";
 
-      let itensValidos = [];
+      const itensValidos = [];
 
-      if (matrizDados && matrizDados.length > 0) {
-        matrizDados.forEach((linha) => {
-          linha.forEach((celula) => {
+      // Recolhe todos os elementos preenchidos da planilha independentemente da posição exata
+      if (Array.isArray(matrizDados)) {
+        matrizDados.forEach(function (linha) {
+          linha.forEach(function (celula) {
             if (celula && celula.texto !== "") {
               itensValidos.push(celula);
             }
@@ -91,25 +129,38 @@
         });
       }
 
-      const TOTAL_SLOTS = 16;
-
       for (let i = 0; i < TOTAL_SLOTS; i++) {
-        let cardDiv = document.createElement("div");
-        cardDiv.className = "flex items-center justify-center p-2 bg-white/75 hover:bg-white/95 border-2 border-blue-600/80 rounded-xl shadow-md transition-all duration-200 text-center relative overflow-hidden backdrop-blur-xs";
+        const cardDiv = document.createElement("div");
+        cardDiv.className =
+          "flex items-center justify-center p-2 bg-white/75 hover:bg-white/95 border-2 border-blue-600/80 rounded-xl shadow-md transition-all duration-200 text-center relative overflow-hidden backdrop-blur-xs";
 
         if (i < itensValidos.length) {
-          let item = itensValidos[i];
-          let texto = item.texto;
-          let link = item.link;
+          const item = itensValidos[i];
 
-          if (link && link !== "") {
-            cardDiv.innerHTML = `<a href="${link}" target="_blank" class="text-[11px] sm:text-xs md:text-sm font-bold text-blue-800 hover:text-blue-950 underline line-clamp-3 w-full h-full flex items-center justify-center p-1 leading-tight">${texto}</a>`;
+          if (urlSegura(item.link)) {
+            // Link clicável (montado via DOM para evitar injeção de HTML)
+            const a = document.createElement("a");
+            a.href = item.link.trim();
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            a.className =
+              "text-[11px] sm:text-xs md:text-sm font-bold text-blue-800 hover:text-blue-950 underline line-clamp-3 w-full h-full flex items-center justify-center p-1 leading-tight";
+            a.textContent = item.texto;
+            cardDiv.appendChild(a);
           } else {
-            cardDiv.innerHTML = `<span class="text-[11px] sm:text-xs md:text-sm font-bold text-slate-900 line-clamp-3 leading-tight">${texto}</span>`;
+            const span = document.createElement("span");
+            span.className =
+              "text-[11px] sm:text-xs md:text-sm font-bold text-slate-900 line-clamp-3 leading-tight";
+            span.textContent = item.texto;
+            cardDiv.appendChild(span);
           }
         } else {
+          // Espaços vazios/reservados para o futuro
           cardDiv.className += " border-dashed border-slate-400 bg-white/30 opacity-60";
-          cardDiv.innerHTML = `<span class="text-[10px] sm:text-xs text-slate-600 font-medium italic"><i class="fa-solid fa-plus mr-1"></i>Reservado</span>`;
+          const span = document.createElement("span");
+          span.className = "text-[10px] sm:text-xs text-slate-600 font-medium italic";
+          span.innerHTML = '<i class="fa-solid fa-plus mr-1"></i>Reservado';
+          cardDiv.appendChild(span);
         }
 
         container.appendChild(cardDiv);
@@ -118,7 +169,13 @@
 
     function tratarErro(erro) {
       const container = document.getElementById("grid-links");
-      container.innerHTML = `<div class="col-span-4 row-span-4 flex items-center justify-center text-red-600 font-bold text-xs sm:text-sm bg-white/75 rounded-xl p-4 backdrop-blur-xs">Erro ao carregar os links: ${erro.message}</div>`;
+      container.innerHTML = "";
+
+      const div = document.createElement("div");
+      div.className =
+        "col-span-4 row-span-4 flex items-center justify-center text-red-600 font-bold text-xs sm:text-sm bg-white/75 rounded-xl p-4 backdrop-blur-xs text-center";
+      div.textContent = "Erro ao carregar os links: " + (erro && erro.message ? erro.message : erro);
+      container.appendChild(div);
     }
   </script>
 </body>
