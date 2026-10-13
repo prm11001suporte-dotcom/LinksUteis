@@ -73,7 +73,7 @@
     // Só é usada fora do Apps Script (ex.: GitHub Pages).
     // Dentro do Apps Script, o google.script.run é usado automaticamente.
     // ============================================================
-    const URL_API = "COLE_AQUI_A_URL_DO_WEB_APP/exec";
+    const URL_API = "https://script.google.com/macros/s/AKfycbzQR-d6Q7sloUQC95NaY2p5SSEKWFpptUk1PtZ18aW3DTrOuLosBxflfcUFdcVohF_IZA/exec?modo=links";
 
     const TOTAL_SLOTS = 16; // grid 4x4
 
@@ -89,7 +89,7 @@
           .obterLinksUteis();
       } else {
         // Execução externa (GitHub Pages): GET simples, sem cabeçalhos customizados
-        if (URL_API.indexOf("https://script.google.com/macros/s/AKfycbw8AdPR9CmBc6M1SG4r8O-4lQ7F-3WZO9I_ow28B1gu/exec?modo=links") !== -1) {
+        if (URL_API.indexOf("COLE_AQUI") !== -1) {
           tratarErro(new Error("Configure a constante URL_API com a URL do Web App (/exec)."));
           return;
         }
